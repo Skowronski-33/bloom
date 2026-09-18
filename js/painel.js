@@ -511,7 +511,7 @@ async function salvarCatalogo(dados){
   });
   const resultado=await resposta.json().catch(()=>null);
   if(!resposta.ok||!resultado||resultado.ok!==true){
-    throw new Error(resultado&&resultado.erro||'Não foi possível salvar o catálogo na Hostinger.');
+    throw new Error(resultado&&resultado.erro||'Não foi possível salvar o catálogo.');
   }
   return resultado;
 }
