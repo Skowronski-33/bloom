@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#FFF9E8">
+<meta name="robots" content="noindex, nofollow">
+<title>Bloom baby kids · Painel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>html:not(.admin-autorizado) body { visibility: hidden; }</style>
+  <link rel="stylesheet" href="css/painel.css?v=prod4">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="js/auth-guard.js"></script>
+  <script src="js/painel.js?v=prod4" defer></script>
+</head>
+<body>
+
+<header class="topo">
+  <div class="wrap l1">
+    <img data-img="logo" alt="Bloom baby kids">
+    <div class="marca"><b>Bloom baby kids</b><span>Painel</span></div>
+    <div class="esp"></div>
+    <div class="acoes">
+      <button class="bt bt-linha bt-p" type="button" onclick="window.location.href='index.html'">
+        <svg viewBox="0 0 24 24"><path d="M9 6l-6 6 6 6M3 12h14M14 6h3a4 4 0 0 1 4 4v4a4 4 0 0 1-4 4h-3"/></svg>
+        <span class="soDesk">Catálogo</span>
+      </button>
+      <button class="bt bt-linha bt-p" id="btImportar">
+        <svg viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5M4 17v3a1 1 0 0 1 1 1h14a1 1 0 0 1 1-1v-3"/></svg>
+        <span class="soDesk">Importar</span>
+      </button>
+      <button class="bt bt-linha bt-p" id="btExportar" title="Baixar backup do catálogo">
+        <svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>
+        <span class="soDesk">Backup</span>
+      </button>
+      <button class="bt bt-linha bt-p" id="btTextos" title="Editar textos da vitrine">
+        <svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h10M4 19h7"/></svg>
+        <span class="soDesk">Textos</span>
+      </button>
+      <button class="bt bt-laranja" id="btNova">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        Nova peça
+      </button>
+    </div>
+  </div>
+  <div class="wrap l2">
+    <div class="busca">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input type="text" id="busca" placeholder="Buscar peça, categoria, cor…" autocomplete="off">
+      <button class="limpa" id="limpaBusca">✕</button>
+    </div>
+    <select class="sel" id="fCat"></select>
+    <select class="sel" id="fSit">
+      <option value="all">Todas</option>
+      <option value="ok">À venda</option>
+      <option value="parcial">Tamanho esgotado</option>
+      <option value="zero">Fora do site</option>
+    </select>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="nota">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>
+    <div><b>Como funciona:</b> toque no tamanho para tirar ou colocar de volta no site.
+    Verde está à venda, riscado saiu. Quando todos os tamanhos de uma peça saem, ela some da vitrine.</div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+  <div class="conta" id="conta"></div>
+  <div class="lista" id="lista"></div>
+  <div class="mais" id="mais"></div>
+</div>
+
+<div class="tela" id="telaEd">
+  <div class="folha">
+    <div class="fh">
+      <h3 id="edTitulo">Nova peça</h3>
+      <button class="icone" id="edFechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="fc">
+      <div class="campo">
+        <label>Foto da peça</label>
+        <div class="foto-box" id="edFotoBox">
+          <div class="foto-previa" id="edFotoPrevia">
+            <img id="edFotoImg" src="" alt="Foto da peça">
+            <button type="button" class="bt-rem-foto" id="btRemFoto" title="Remover foto">✕</button>
+          </div>
+          <div class="foto-upload" id="edFotoUpload">
+            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <b>Adicionar foto</b>
+            <span>Toque para escolher a foto no dispositivo</span>
+          </div>
+        </div>
+        <input type="file" id="edFotoArq" accept="image/*" hidden>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+          <button type="button" class="bt bt-linha bt-p" id="btEscolherFoto" style="flex:none;min-height:34px;padding:6px 14px;font-size:12.5px">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            Escolher foto
+          </button>
+        </div>
+      </div>
+      <div class="campo">
+        <label>Nome da peça <b>*</b></label>
+        <input type="text" id="edNome" maxlength="70" placeholder="Macacão Manga Longa Ursinho">
+        <p class="dica">É o nome que a cliente vê no site. Evite abreviação.</p>
+        <p class="msg" id="msgNome">Escreva um nome.</p>
+      </div>
+      <div class="duo">
+        <div class="campo">
+          <label>Categoria <b>*</b></label>
+          <select id="edCat"></select>
+        </div>
+        <div class="campo">
+          <label>Cor</label>
+          <input type="text" id="edCor" placeholder="Azul">
+        </div>
+      </div>
+      <div class="campo">
+        <label>Código no Siscom</label>
+        <input type="text" id="edCod" inputmode="numeric" placeholder="gerado automaticamente">
+        <p class="dica">Serve para casar com a planilha quando você reimportar.</p>
+      </div>
+      <div class="campo">
+        <label>Tamanhos, preço e disponibilidade <b>*</b></label>
+        <div class="gradeV" id="edGrade"></div>
+        <p class="msg" id="msgVar">Cadastre pelo menos um tamanho com preço.</p>
+        <div class="novaV">
+          <div class="campo" style="margin:0">
+            <label style="font-size:10.5px">Tamanho</label>
+            <input type="text" id="novoTam" placeholder="RN, 2, U…" maxlength="6">
+          </div>
+          <div class="campo" style="margin:0">
+            <label style="font-size:10.5px">Preço</label>
+            <div class="prefixo"><span>R$</span><input type="text" id="novoPreco" inputmode="decimal" placeholder="199,90"></div>
+          </div>
+          <button class="bt bt-linha bt-p" id="addTam" style="margin-bottom:1px">Adicionar</button>
+        </div>
+      </div>
+    </div>
+    <div class="ff">
+      <button class="bt bt-fantasma bt-ruim" id="edExcluir">Excluir</button>
+      <div class="esp"></div>
+      <button class="bt bt-linha" id="edCancelar">Cancelar</button>
+      <button class="bt bt-laranja" id="edSalvar">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="tela" id="telaImp">
+  <div class="folha">
+    <div class="fh">
+      <h3>Atualizar pela planilha</h3>
+      <button class="icone" id="impFechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="fc">
+      <div class="passo"><i>1</i><div>Peça ao suporte do Siscom a exportação de produtos com saldo, do mesmo jeito que veio da primeira vez.</div></div>
+      <div class="passo"><i>2</i><div>Solte o arquivo aqui embaixo. Colunas esperadas: <b>CODPRODUTO, DESCRICAO, CODBARRAS, TAMANHO, QTDE, PREÇO</b>.</div></div>
+      <div class="passo"><i>3</i><div>O painel compara com o que já existe: atualiza preço e disponibilidade, e mostra o que entrou de novo.</div></div>
+      <div style="height:14px"></div>
+      <div class="solta" id="solta">
+        <svg viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5M4 17v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+        <b>Solte a planilha aqui</b>
+        <span>ou toque para escolher · .xls, .xlsx, .csv ou .xml</span>
+        <input type="file" id="arq" accept=".xls,.xlsx,.csv,.xml" hidden>
+      </div>
+      <div id="impResultado" style="margin-top:14px"></div>
+    </div>
+    <div class="ff">
+      <div class="esp"></div>
+      <button class="bt bt-linha" id="impCancelar">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="tela" id="telaTextos">
+  <div class="folha">
+    <div class="fh">
+      <h3>Textos da vitrine</h3>
+      <button class="icone" id="txtFechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="fc">
+      <div class="campo">
+        <label for="txtColecao">Chamada da coleção</label>
+        <input type="text" id="txtColecao" maxlength="60" placeholder="Coleção Verão 2027">
+        <p class="dica">Aparece acima do título principal na página inicial.</p>
+      </div>
+    </div>
+    <div class="ff">
+      <div class="esp"></div>
+      <button class="bt bt-linha" id="txtCancelar">Cancelar</button>
+      <button class="bt bt-laranja" id="txtSalvar">Salvar texto</button>
+    </div>
+  </div>
+</div>
+
+<div class="aviso" id="aviso"><span class="tx" id="avisoTx"></span><button id="avisoAcao" style="display:none">Desfazer</button></div>
+</body>
+</html>

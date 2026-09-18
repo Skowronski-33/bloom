@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^php -v; php -r \"var_export\\(password_verify\\('Bloomadmin123', '\\$2y\\$10\\$r9eRO9nQjzUGnzNdDWI0veAXf7SqhIo9oQf3635i0OEeaFDSRuqNq'\\)\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}
