@@ -473,12 +473,14 @@ function importarPlanilha(f){
         });
         if(!agrupado.size)throw new Error('Nenhuma linha válida. Confira os cabeçalhos CODPRODUTO, DESCRICAO, TAMANHO, QTDE e PREÇO.');
         const antigos=new Map(P.map(p=>[p.c,p]));
-        const produtos=[...agrupado.values()].map(novo=>{
+        const produtosPorCodigo=new Map(antigos);
+        agrupado.forEach(novo=>{
           const antigo=antigos.get(novo.c)||{};
           const v=novo.v.filter(v=>v.p>0);
-          if(!v.length)return null;
-          return {...antigo,...novo,n:novo.n||antigo.n||`Peça ${novo.c}`,cat:antigo.cat&&antigo.cat!=='acessorios'?antigo.cat:inferirCategoria(novo.n),cor:antigo.cor||'',bruto:antigo.bruto||novo.n.toUpperCase(),v,pmin:Math.min(...v.map(x=>x.p)),pmax:Math.max(...v.map(x=>x.p)),est:v.reduce((s,x)=>s+x.q,0)};
-        }).filter(Boolean);
+          if(!v.length)return;
+          produtosPorCodigo.set(novo.c,{...antigo,...novo,n:novo.n||antigo.n||`Peça ${novo.c}`,cat:antigo.cat&&antigo.cat!=='acessorios'?antigo.cat:inferirCategoria(novo.n),cor:antigo.cor||'',bruto:antigo.bruto||novo.n.toUpperCase(),v,pmin:Math.min(...v.map(x=>x.p)),pmax:Math.max(...v.map(x=>x.p)),est:v.reduce((s,x)=>s+x.q,0)});
+        });
+        const produtos=[...produtosPorCodigo.values()];
         resolve({loja:'Bloom baby kids',origem:`Siscom · ${f.name}`,gerado_em:new Date().toISOString(),colecao:DADOS.colecao||COLECAO_PADRAO,categorias:CAT,ordem_tamanhos:ORDEM_TAM,produtos});
       }catch(erro){reject(erro);}
     };
