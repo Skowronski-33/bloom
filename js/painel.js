@@ -389,6 +389,19 @@ $('btExportar').onclick=()=>{
   link.href=url; link.download=`bloom-catalogo-${new Date().toISOString().slice(0,10)}.json`;
   link.click(); URL.revokeObjectURL(url); aviso('Backup baixado');
 };
+$('btLimpar').onclick=async()=>{
+  const quantidade=P.length;
+  if(!quantidade){aviso('A lista de produtos já está vazia');return;}
+  if(!window.confirm(`Limpar os ${quantidade} produtos do painel? Faça um backup antes. Esta ação não pode ser desfeita.`))return;
+  const botao=$('btLimpar');
+  const dados={loja:'Bloom baby kids',origem:'Painel administrativo',gerado_em:new Date().toISOString(),colecao:DADOS.colecao||COLECAO_PADRAO,categorias:CAT,ordem_tamanhos:ORDEM_TAM,produtos:[]};
+  botao.disabled=true;
+  try{
+    await salvarCatalogo(dados);
+    P=[]; DADOS.produtos=[]; proxCod=1; S.pagina=1; pintar(); aviso('Lista de produtos limpa');
+  }catch(erro){aviso(erro.message);}
+  finally{botao.disabled=false;}
+};
 function fecharImp(){$('telaImp').classList.remove('on');document.body.classList.remove('trava');$('impResultado').innerHTML='';}
 $('impFechar').onclick=fecharImp; $('impCancelar').onclick=fecharImp;
 $('telaImp').onclick=e=>{if(e.target===$('telaImp'))fecharImp();};
