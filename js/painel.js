@@ -506,7 +506,7 @@ async function simular(f){
     const dados=await importarPlanilha(f);
     await salvarCatalogo(dados);
     P=dados.produtos.map((p,i)=>indexarProduto({...p,i})); proxCod=Math.max(...P.map(p=>p.c),0)+1; S.pagina=1; pintar();
-    $('impResultado').innerHTML=`<div class="nota" style="background:var(--ok-bg)"><svg viewBox="0 0 24 24" style="stroke:var(--ok)"><path d="M4 12l5 5L20 7"/></svg><div><b>${f.name}</b> importado com sucesso.<br>${P.length} peças foram salvas no banco da Hostinger.</div></div>`;
+    $('impResultado').innerHTML=`<div class="nota" style="background:var(--ok-bg)"><svg viewBox="0 0 24 24" style="stroke:var(--ok)"><path d="M4 12l5 5L20 7"/></svg><div><b>${f.name}</b> importado com sucesso.<br>${P.length} peças foram salvas.</div></div>`;
   }catch(erro){$('impResultado').innerHTML=`<div class="nota" style="background:#fff0ed;color:var(--ruim)">${erro.message}</div>`;}
 }
 
