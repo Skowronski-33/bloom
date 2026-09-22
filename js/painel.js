@@ -229,11 +229,26 @@ document.addEventListener('click',e=>{
   const ex=e.target.closest('[data-excluir]'); if(ex){excluir(+ex.dataset.excluir);return;}
 });
 
-function excluir(i){
+async function excluir(i){
   const p=P[i], pos=P.indexOf(p);
   if(!window.confirm(`Excluir "${p.n}"? Esta ação poderá ser desfeita apenas agora.`))return;
   P.splice(pos,1); P.forEach((x,k)=>x.i=k); S.pagina=1; pintar();
-  aviso(`<b>${esc(p.n)}</b> excluída`,()=>{P.splice(pos,0,p);P.forEach((x,k)=>x.i=k);pintar();aviso('Exclusão desfeita');});
+  const dados={loja:'Bloom baby kids',origem:'Painel administrativo',gerado_em:new Date().toISOString(),colecao:DADOS.colecao||COLECAO_PADRAO,categorias:CAT,ordem_tamanhos:ORDEM_TAM,produtos:P.map(({tk,...produto})=>produto)};
+  try{
+    await salvarCatalogo(dados);
+    aviso(`<b>${esc(p.n)}</b> excluída`,async()=>{
+      P.splice(pos,0,p); P.forEach((x,k)=>x.i=k); pintar();
+      try{
+        const restaurado={...dados,gerado_em:new Date().toISOString(),produtos:P.map(({tk,...produto})=>produto)};
+        await salvarCatalogo(restaurado);
+        aviso('Exclusão desfeita');
+      }catch(erro){
+        P.splice(pos,1); P.forEach((x,k)=>x.i=k); pintar(); aviso(erro.message);
+      }
+    });
+  }catch(erro){
+    P.splice(pos,0,p); P.forEach((x,k)=>x.i=k); pintar(); aviso(erro.message);
+  }
 }
 
 /* ---------- editor ---------- */
