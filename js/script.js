@@ -548,10 +548,13 @@
       ['#FFF5DC', '#E9A800', '#FDBC16', '#FF8118'], ['#F1FDE1', '#7CC91F', '#A7F54F', '#FFF700'],
       ['#FFEFE1', '#F26A00', '#FF8118', '#FFF700']];
       $('listaIdades').innerHTML = Object.keys(IDADELAB).map((k, i) => {
-        const c = cores[i];
+        const c = cores[i % cores.length];
+        const numerica = /^\d+-\d+$/.test(k);
+        const nome = numerica ? k.replace('-', ' a ') : IDADELAB[k];
+        const complemento = numerica ? 'anos' : '';
         return `<button class="idade" data-idade="${k}" aria-label="Ver peças para ${IDADELAB[k]}" aria-pressed="false" style="background:${c[0]};color:${c[1]}">
       <span class="fl">${florIcone(c[2], c[3], '#fff')}</span>
-      <span class="n">${k.replace('-', ' a ')}</span><span class="l">anos</span></button>`;
+      <span class="n">${nome}</span><span class="l">${complemento}</span></button>`;
       }).join('');
       document.querySelectorAll('.idade').forEach(b => b.onclick = () => {
         const k = b.dataset.idade;
