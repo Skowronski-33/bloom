@@ -679,6 +679,7 @@
     }
 
     function desmarcarIndisponiveis() {
+      if (!P.length) return;
       let alterou = false;
       sacola.forEach(item => {
         if (item.sel !== false && !itemDisponivelSacola(item)) {
