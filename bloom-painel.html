@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="css/painel.css?v=prod4">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="js/auth-guard.js"></script>
-  <script src="js/painel.js?v=prod6" defer></script>
+  <script src="js/painel.js?v=prod8" defer></script>
 </head>
 <body>
 
@@ -31,11 +31,11 @@
         <span class="soDesk">Catálogo</span>
       </button>
       <button class="bt bt-linha bt-p" id="btImportar">
-        <svg viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5M4 17v3a1 1 0 0 1 1 1h14a1 1 0 0 1 1-1v-3"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>
         <span class="soDesk">Importar</span>
       </button>
       <button class="bt bt-linha bt-p" id="btExportar" title="Baixar backup do catálogo">
-        <svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5M4 17v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
         <span class="soDesk">Backup</span>
       </button>
       <button class="bt bt-linha bt-p bt-ruim" id="btLimpar" title="Apagar todos os produtos">
@@ -137,7 +137,8 @@
         <div class="novaV">
           <div class="campo" style="margin:0">
             <label style="font-size:10.5px">Tamanho</label>
-            <input type="text" id="novoTam" placeholder="RN, 2, U…" maxlength="6">
+            <select id="novoTam"></select>
+            <input type="text" id="novoTamOutro" placeholder="Digite o tamanho" maxlength="10" style="display:none">
           </div>
           <div class="campo" style="margin:0">
             <label style="font-size:10.5px">Preço</label>

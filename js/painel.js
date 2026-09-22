@@ -15,6 +15,7 @@ const ORDEM_TAM=DADOS.ordem_tamanhos;
 const API_URL='api/catalogo.php';
 const API_TOKEN='4a101b70f48d54e39fa4f26e1e41325607322bdea4d3d60e';
 const COLECAO_PADRAO='Coleção Verão 2027';
+const TAMANHO_OUTRO='__outro';
 let P=DADOS.produtos.map((p,i)=>({...p,i}));
 let proxCod=Math.max(...P.map(p=>p.c),0)+1;
 
@@ -215,8 +216,14 @@ document.addEventListener('click',e=>{
   const td=e.target.closest('[data-todos]'); if(td){
     const p=P[+td.dataset.todos], antes=p.v.map(v=>v.on), ligar=sit(p)==='zero';
     p.v.forEach(v=>v.on=ligar); pintar();
-    aviso(ligar?`<b>${p.n}</b> voltou ao site`:`<b>${p.n}</b> saiu da vitrine`,
-      ()=>{p.v.forEach((v,j)=>v.on=antes[j]);pintar();aviso('Desfeito');});
+    const produtos=P.map(({tk,...produto})=>produto);
+    const dados={loja:'Bloom baby kids',origem:'Painel administrativo',gerado_em:new Date().toISOString(),colecao:DADOS.colecao||COLECAO_PADRAO,categorias:CAT,ordem_tamanhos:ORDEM_TAM,produtos};
+    salvarCatalogo(dados).then(()=>{
+      aviso(ligar?`<b>${p.n}</b> voltou ao site`:`<b>${p.n}</b> saiu da vitrine`,
+        ()=>{p.v.forEach((v,j)=>v.on=antes[j]);pintar();aviso('Desfeito');});
+    }).catch(erro=>{
+      p.v.forEach((v,j)=>v.on=antes[j]); pintar(); aviso(erro.message);
+    });
     return;
   }
   const ex=e.target.closest('[data-excluir]'); if(ex){excluir(+ex.dataset.excluir);return;}
@@ -319,6 +326,17 @@ $('btRemFoto').onclick=e=>{
   $('edFotoArq').value='';
   atualizarFotoPrevia('');
 };
+function prepararTamanhos(){
+  $('novoTam').innerHTML='<option value="">Selecione o tamanho</option>'
+    +ORDEM_TAM.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('')
+    +'<option value="__outro">Outro tamanho...</option>';
+  $('novoTam').onchange=()=>{
+    const outro=$('novoTam').value===TAMANHO_OUTRO;
+    $('novoTamOutro').style.display=outro?'':'none';
+    if(outro)$('novoTamOutro').focus();
+  };
+}
+prepararTamanhos();
 function pintarGrade(){
   rascunho.v.sort((a,b)=>(ORDEM_TAM.indexOf(a.t)+99*(ORDEM_TAM.indexOf(a.t)<0))-(ORDEM_TAM.indexOf(b.t)+99*(ORDEM_TAM.indexOf(b.t)<0)));
   $('edGrade').innerHTML=`<div class="linhaV cab"><span>Tamanho</span><span>Preço / promoção</span><span>No site</span></div>`
@@ -347,12 +365,13 @@ function pintarGrade(){
     pintarGrade();});
 }
 $('addTam').onclick=()=>{
-  const t=$('novoTam').value.trim().toUpperCase(), p=nrs($('novoPreco').value);
+  const valorTamanho=$('novoTam').value===TAMANHO_OUTRO?$('novoTamOutro').value:$('novoTam').value;
+  const t=valorTamanho.trim().toUpperCase(), p=nrs($('novoPreco').value);
   if(!t){aviso('Informe o tamanho');return;}
   if(isNaN(p)||p<=0){aviso('Informe o preço');return;}
   if(rascunho.v.some(v=>v.t===t)){aviso('Esse tamanho já está na lista');return;}
   rascunho.v.push({t,q:1,p,e:'',on:true});
-  $('novoTam').value=''; $('novoPreco').value=''; pintarGrade();
+  $('novoTam').value=''; $('novoTamOutro').value=''; $('novoTamOutro').style.display='none'; $('novoPreco').value=''; pintarGrade();
 };
 $('edSalvar').onclick=async()=>{
   let ok=true;

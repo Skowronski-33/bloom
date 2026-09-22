@@ -108,9 +108,10 @@
       if (elemento) elemento.textContent = String(dados.colecao || COLECAO_PADRAO).trim() || COLECAO_PADRAO;
     }
     /* faixa de idade deduzida do tamanho, que é como a mãe procura */
-    const IDADELAB = { '0-2': '0 a 2 anos', '2-4': '2 a 4 anos', '4-6': '4 a 6 anos', '6-10': '6 a 10 anos', '10-14': '10 a 14 anos' };
+    const IDADELAB = { rn: 'Recém-nascido', '0-2': '0 a 2 anos', '2-4': '2 a 4 anos', '4-6': '4 a 6 anos', '6-10': '6 a 10 anos', '10-14': '10 a 14 anos', unico: 'Tamanho único', especial: 'Tamanho especial' };
     const TAM2IDADE = {
-      PR: '0-2', RN: '0-2', P: '0-2', M: '0-2', G: '0-2', GG: '0-2', '1': '0-2', '2': '2-4', '3': '2-4',
+      PR: 'rn', RN: 'rn', P: '0-2', M: '0-2', G: '0-2', GG: '0-2', '1': '0-2', U: 'unico',
+      '2': '2-4', '3': '2-4',
       '4': '2-4', '6': '4-6', '8': '6-10', '10': '6-10', '12': '10-14', '14': '10-14'
     };
     const CATCOR = {
@@ -139,7 +140,7 @@
     function montarProdutos(dados) {
       const produtos = dados.produtos.map((p, i) => {
       const tams = p.v.map(v => v.t);
-      const idade = TAM2IDADE[tams.find(t => TAM2IDADE[t])] || '0-2';
+      const idade = TAM2IDADE[tams.find(t => TAM2IDADE[t])] || 'especial';
       const cor = CORPAL[p.cor] || 'rosa';
       const categoria = p.cat === 'acessorios' ? inferirCategoria(p.n) : p.cat;
       const precoNormal = Math.min(...p.v.map(v => v.p));
