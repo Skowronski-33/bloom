@@ -354,7 +354,7 @@ $('addTam').onclick=()=>{
   rascunho.v.push({t,q:1,p,e:'',on:true});
   $('novoTam').value=''; $('novoPreco').value=''; pintarGrade();
 };
-$('edSalvar').onclick=()=>{
+$('edSalvar').onclick=async()=>{
   let ok=true;
   rascunho.n=$('edNome').value.trim();
   rascunho.cat=$('edCat').value;
@@ -366,15 +366,26 @@ $('edSalvar').onclick=()=>{
   rascunho.bruto=rascunho.bruto||rascunho.n.toUpperCase();
   rascunho.tk=[...new Set(norm([rascunho.n,CAT[rascunho.cat]||'',rascunho.cor,
     rascunho.v.map(v=>v.t).join(' '),'tamanho tam'].join(' ')).split(' '))].filter(Boolean);
+  const listaAnterior=P.slice();
   if(editando===null){
     rascunho.i=P.length; if(rascunho.c>=proxCod)proxCod=rascunho.c+1;
     P.unshift(rascunho); P.forEach((x,k)=>x.i=k);
-    aviso(`<b>${rascunho.n}</b> cadastrada`);
   }else{
     rascunho.i=editando; P[editando]=rascunho;
-    aviso(`<b>${rascunho.n}</b> atualizada`);
   }
-  fecharEditor(); S.pagina=1; pintar();
+  const botao=$('edSalvar');
+  botao.disabled=true;
+  try{
+    const produtos=P.map(({tk,...produto})=>produto);
+    const dados={loja:'Bloom baby kids',origem:'Painel administrativo',gerado_em:new Date().toISOString(),colecao:DADOS.colecao||COLECAO_PADRAO,categorias:CAT,ordem_tamanhos:ORDEM_TAM,produtos};
+    await salvarCatalogo(dados);
+    fecharEditor(); S.pagina=1; pintar();
+    aviso(`<b>${rascunho.n}</b> ${editando===null?'cadastrada':'atualizada'}`);
+  }catch(erro){
+    P=listaAnterior; P.forEach((produto,i)=>produto.i=i);
+    pintar();
+    aviso(erro.message);
+  }finally{botao.disabled=false;}
 };
 function fecharEditor(){$('telaEd').classList.remove('on');document.body.classList.remove('trava');}
 $('edFechar').onclick=fecharEditor; $('edCancelar').onclick=fecharEditor;
