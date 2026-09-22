@@ -684,6 +684,11 @@
       sacola.forEach(item => {
         if (item.sel !== false && !itemDisponivelSacola(item)) {
           item.sel = false;
+          item.autoDesmarcado = true;
+          alterou = true;
+        } else if (item.sel === false && item.autoDesmarcado && itemDisponivelSacola(item)) {
+          item.sel = true;
+          delete item.autoDesmarcado;
           alterou = true;
         }
       });
