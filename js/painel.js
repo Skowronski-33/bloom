@@ -203,9 +203,9 @@ document.addEventListener('click',e=>{
     const eraZero=p.v.filter(x=>x.on).length===(antes?1:0);
     pintar();
     const saiu=sit(p)==='zero';
-    aviso(v.on?`<b>${p.n}</b> · tamanho ${v.t} voltou ao site`
-      :saiu?`<b>${p.n}</b> saiu da vitrine — todos os tamanhos esgotados`
-           :`<b>${p.n}</b> · tamanho ${v.t} saiu do site`,
+    aviso(v.on?`<b>${esc(p.n)}</b> · tamanho ${esc(v.t)} voltou ao site`
+      :saiu?`<b>${esc(p.n)}</b> saiu da vitrine — todos os tamanhos esgotados`
+           :`<b>${esc(p.n)}</b> · tamanho ${esc(v.t)} saiu do site`,
       ()=>{v.on=antes;pintar();aviso('Desfeito');});
     return;
   }
@@ -219,7 +219,7 @@ document.addEventListener('click',e=>{
     const produtos=P.map(({tk,...produto})=>produto);
     const dados={loja:'Bloom baby kids',origem:'Painel administrativo',gerado_em:new Date().toISOString(),colecao:DADOS.colecao||COLECAO_PADRAO,categorias:CAT,ordem_tamanhos:ORDEM_TAM,produtos};
     salvarCatalogo(dados).then(()=>{
-      aviso(ligar?`<b>${p.n}</b> voltou ao site`:`<b>${p.n}</b> saiu da vitrine`,
+      aviso(ligar?`<b>${esc(p.n)}</b> voltou ao site`:`<b>${esc(p.n)}</b> saiu da vitrine`,
         ()=>{p.v.forEach((v,j)=>v.on=antes[j]);pintar();aviso('Desfeito');});
     }).catch(erro=>{
       p.v.forEach((v,j)=>v.on=antes[j]); pintar(); aviso(erro.message);
@@ -233,7 +233,7 @@ function excluir(i){
   const p=P[i], pos=P.indexOf(p);
   if(!window.confirm(`Excluir "${p.n}"? Esta ação poderá ser desfeita apenas agora.`))return;
   P.splice(pos,1); P.forEach((x,k)=>x.i=k); S.pagina=1; pintar();
-  aviso(`<b>${p.n}</b> excluída`,()=>{P.splice(pos,0,p);P.forEach((x,k)=>x.i=k);pintar();aviso('Exclusão desfeita');});
+  aviso(`<b>${esc(p.n)}</b> excluída`,()=>{P.splice(pos,0,p);P.forEach((x,k)=>x.i=k);pintar();aviso('Exclusão desfeita');});
 }
 
 /* ---------- editor ---------- */
@@ -399,7 +399,7 @@ $('edSalvar').onclick=async()=>{
     const dados={loja:'Bloom baby kids',origem:'Painel administrativo',gerado_em:new Date().toISOString(),colecao:DADOS.colecao||COLECAO_PADRAO,categorias:CAT,ordem_tamanhos:ORDEM_TAM,produtos};
     await salvarCatalogo(dados);
     fecharEditor(); S.pagina=1; pintar();
-    aviso(`<b>${rascunho.n}</b> ${editando===null?'cadastrada':'atualizada'}`);
+    aviso(`<b>${esc(rascunho.n)}</b> ${editando===null?'cadastrada':'atualizada'}`);
   }catch(erro){
     P=listaAnterior; P.forEach((produto,i)=>produto.i=i);
     pintar();

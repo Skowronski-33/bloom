@@ -51,8 +51,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+$dados = json_decode(file_get_contents('php://input'), true);
+$usuario = is_array($dados) ? (string) ($dados['usuario'] ?? '') : '';
+$senha = is_array($dados) ? (string) ($dados['senha'] ?? '') : '';
 $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
-$limiteArquivo = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'bloom-login-' . hash('sha256', $ip) . '.json';
+$chaveLimite = hash('sha256', $ip . '|' . $usuario);
+$limiteArquivo = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'bloom-login-' . $chaveLimite . '.json';
 $agora = time();
 $tentativas = [];
 if (is_file($limiteArquivo)) {
@@ -66,9 +70,6 @@ if (count($tentativas) >= 5) {
     exit;
 }
 
-$dados = json_decode(file_get_contents('php://input'), true);
-$usuario = is_array($dados) ? (string) ($dados['usuario'] ?? '') : '';
-$senha = is_array($dados) ? (string) ($dados['senha'] ?? '') : '';
 $adminUser = (string) ($config['admin_user'] ?? '');
 $hash = (string) ($config['admin_password_hash'] ?? '');
 

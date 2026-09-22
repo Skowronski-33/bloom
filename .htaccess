@@ -1,7 +1,19 @@
 DirectoryIndex index.html
 Options -Indexes
 
+<IfModule mod_headers.c>
+	Header always set X-Content-Type-Options "nosniff"
+	Header always set X-Frame-Options "DENY"
+	Header always set Referrer-Policy "strict-origin-when-cross-origin"
+	Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
+
 RewriteEngine On
+RewriteRule (^|/)\.git(?:/|$) - [F,L,NC]
+RewriteRule (^|/)\.env(?:\.|$) - [F,L,NC]
+<FilesMatch "\.(csv|xls|xlsx|bak|old|sql|log|ini)$">
+	Require all denied
+</FilesMatch>
 RewriteCond %{THE_REQUEST} \s/+index\.html(?:[?\s]) [NC]
 RewriteRule ^index\.html$ / [R=301,L]
 

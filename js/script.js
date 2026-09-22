@@ -395,10 +395,10 @@
         <div class="tags">${et}${real}</div>
       </div>
       <div class="info">
-        <h3>${x.n}</h3>
-        <p class="meta">${CATLAB[x.cat]} · ${IDADELAB[x.id]}</p>
+        <h3>${esc(x.n)}</h3>
+        <p class="meta">${esc(CATLAB[x.cat])} · ${esc(IDADELAB[x.id])}</p>
         <div class="preco"><span class="ag">${valor}</span>${ant}</div>
-        <div class="tam">${x.tams.map(t => `<span class="${x.fora.includes(t) ? 'off' : ''}">${t}</span>`).join('')}</div>
+        <div class="tam">${x.tams.map(t => `<span class="${x.fora.includes(t) ? 'off' : ''}">${esc(t)}</span>`).join('')}</div>
       </div>
     </article>`;
       }).join('') : vazioHTML(ts);
@@ -504,7 +504,7 @@
             const x = r.x;
             h += `<button class="ai peca" data-abrir="${x.i}">
           <span class="mini">${fotoHTML(x)}</span>
-          <span class="tx"><b>${x.n}</b><span>${CATLAB[x.cat]} · ${IDADELAB[x.id]}</span></span>
+          <span class="tx"><b>${esc(x.n)}</b><span>${esc(CATLAB[x.cat])} · ${esc(IDADELAB[x.id])}</span></span>
           <span class="pr">${rs(x.preco)}</span></button>`;
           });
         }
@@ -665,7 +665,7 @@
       sacola.push({ i, tam, ts: Date.now(), sel: true });
       salvarSacola();
       sincFav();
-      aviso('<b>' + P[i].n + ' (Tam. ' + tam + ')</b> adicionada à sacola');
+      aviso('<b>' + esc(P[i].n) + ' (Tam. ' + esc(tam) + ')</b> adicionada à sacola');
       return true;
     }
 
@@ -684,7 +684,7 @@
         sacola.splice(index, 1);
         salvarSacola();
         sincFav();
-        p && aviso('<b>' + p.n + '</b> removida da sacola');
+        p && aviso('<b>' + esc(p.n) + '</b> removida da sacola');
       }
     }
 
@@ -716,7 +716,7 @@
         <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
       </button>
       <div class="th">${fotoHTML(x)}</div>
-      <div class="nm">${x.n}<span>Tamanho <b>${item.tam}</b> · ${rs(precoDoTamanho(x, item.tam))}</span></div>
+      <div class="nm">${esc(x.n)}<span>Tamanho <b>${esc(item.tam)}</b> · ${rs(precoDoTamanho(x, item.tam))}</span></div>
       <button class="rm" data-remsacola="${idx}" title="Remover da sacola">✕</button>
     </div>`;
       }).join('')
@@ -763,9 +763,9 @@
       $('fDesc').textContent = atual.d;
       $('fPalco').innerHTML = fotoHTML(atual);
       $('fTams').innerHTML = atual.tams.map(t =>
-        `<button class="tt${atual.fora.includes(t) ? ' fora' : ''}" data-t="${t}">${t}</button>`).join('');
+        `<button class="tt${atual.fora.includes(t) ? ' fora' : ''}" data-t="${esc(t)}">${esc(t)}</button>`).join('');
       $('fDisp').innerHTML = atual.fora.length
-        ? `<span>Tamanho ${atual.fora.join(', ')} esgotado no momento</span>`
+        ? `<span>Tamanho ${esc(atual.fora.join(', '))} esgotado no momento</span>`
         : `<span>Todos os tamanhos disponíveis</span>`;
       $('fFav').innerHTML = '&nbsp; Adicionar à Sacola';
       document.querySelectorAll('#fTams .tt').forEach(b => b.onclick = () => {
@@ -794,8 +794,11 @@
     }
     function msg() {
       const d = new Date();
-      $('fBolha').innerHTML = texto().replace(/\*(.+?)\*/g, '<b>$1</b>')
-        + `<span class="h">${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} ✓✓</span>`;
+      const bolha = $('fBolha');
+      const hora = document.createElement('span');
+      hora.className = 'h';
+      hora.textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} ✓✓`;
+      bolha.replaceChildren(document.createTextNode(texto()), hora);
     }
     function fecharFicha() { $('tela').classList.remove('on'); document.body.classList.remove('trava'); }
     $('tela').onclick = e => { if (e.target === $('tela')) fecharFicha(); };
