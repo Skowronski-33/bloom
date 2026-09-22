@@ -657,12 +657,28 @@
       try { localStorage.setItem('bloom_sacola_v1', JSON.stringify(sacola)); } catch (e) { }
     }
 
+    function produtoDaSacola(item) {
+      if (item.c != null) return P.find(p => String(p.c) === String(item.c));
+      return P[item.i];
+    }
+
+    function normalizarReferenciasSacola() {
+      let alterou = false;
+      sacola.forEach(item => {
+        if (item.c == null && P[item.i]) {
+          item.c = P[item.i].c;
+          alterou = true;
+        }
+      });
+      if (alterou) salvarSacola();
+    }
+
     function addSacola(i, tam) {
       if (!tam) {
         aviso('Escolha um tamanho primeiro 🌼');
         return false;
       }
-      sacola.push({ i, tam, ts: Date.now(), sel: true });
+      sacola.push({ i, c: P[i].c, tam, ts: Date.now(), sel: true });
       salvarSacola();
       sincFav();
       aviso('<b>' + esc(P[i].n) + ' (Tam. ' + esc(tam) + ')</b> adicionada à sacola');
@@ -680,7 +696,7 @@
     function remSacola(index) {
       if (index >= 0 && index < sacola.length) {
         const item = sacola[index];
-        const p = P[item.i];
+        const p = produtoDaSacola(item);
         sacola.splice(index, 1);
         salvarSacola();
         sincFav();
@@ -699,7 +715,10 @@
       s.classList.toggle('on', sacola.length > 0);
       if (selecionados.length) { s.classList.remove('pulo'); void s.offsetWidth; s.classList.add('pulo'); }
 
-      const total = selecionados.reduce((a, b) => a + (P[b.i] ? precoDoTamanho(P[b.i], b.tam) : 0), 0);
+      const total = selecionados.reduce((a, b) => {
+        const p = produtoDaSacola(b);
+        return a + (p ? precoDoTamanho(p, b.tam) : 0);
+      }, 0);
 
       $('gConta').textContent = sacola.length
         ? `${selecionados.length} de ${sacola.length} ${sacola.length > 1 ? 'itens selecionados' : 'item selecionado'}`
@@ -707,7 +726,7 @@
       $('gTotal').textContent = rs(total);
 
       $('gCorpo').innerHTML = sacola.length ? sacola.map((item, idx) => {
-        const x = P[item.i];
+        const x = produtoDaSacola(item);
         if (!x) return '';
         const isSel = item.sel !== false;
         return `
@@ -741,9 +760,12 @@
       const selecionados = sacola.filter(x => x.sel !== false);
       if (!selecionados.length) { aviso('Selecione pelo menos um item para comprar 🌼'); return; }
 
-      const total = selecionados.reduce((a, b) => a + (P[b.i] ? P[b.i].preco : 0), 0);
+      const total = selecionados.reduce((a, b) => {
+        const p = produtoDaSacola(b);
+        return a + (p ? p.preco : 0);
+      }, 0);
       const listaTexto = selecionados.map((item, idx) => {
-        const x = P[item.i];
+        const x = produtoDaSacola(item);
         return `${idx + 1}. ${x.n} — Tam. ${item.tam} — ${rs(precoDoTamanho(x, item.tam))}`;
       }).join('\n');
 
@@ -819,7 +841,7 @@
     addEventListener('keydown', e => { if (e.key === 'Escape') { fecharFicha(); fecharMenu(); fecharGaveta(); } });
 
     /* ---------- vai ---------- */
-    aplicar(); sincFav(); olhar(); setInterval(olhar, 900);
+    aplicar(); normalizarReferenciasSacola(); sincFav(); olhar(); setInterval(olhar, 900);
     fetch('api/catalogo.php', { cache: 'no-store' })
       .then(r => r.ok ? r.json() : null)
       .then(dados => {
@@ -829,6 +851,8 @@
         P = montarProdutos(dados);
         indexarBusca();
         aplicar();
+        normalizarReferenciasSacola();
+        sincFav();
       })
       .catch(() => { /* mantém a página vazia até a API da hospedagem responder */ });
 
