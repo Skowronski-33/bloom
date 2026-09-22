@@ -673,6 +673,22 @@
       if (alterou) salvarSacola();
     }
 
+    function itemDisponivelSacola(item) {
+      const produto = produtoDaSacola(item);
+      return !!produto && !produto.fora.includes(item.tam);
+    }
+
+    function desmarcarIndisponiveis() {
+      let alterou = false;
+      sacola.forEach(item => {
+        if (item.sel !== false && !itemDisponivelSacola(item)) {
+          item.sel = false;
+          alterou = true;
+        }
+      });
+      if (alterou) salvarSacola();
+    }
+
     function addSacola(i, tam) {
       if (!tam) {
         aviso('Escolha um tamanho primeiro 🌼');
@@ -687,6 +703,10 @@
 
     function toggleItemSacola(index) {
       if (index >= 0 && index < sacola.length) {
+        if (!itemDisponivelSacola(sacola[index])) {
+          aviso('Este produto não está mais disponível nesse tamanho.');
+          return;
+        }
         sacola[index].sel = sacola[index].sel === false ? true : false;
         salvarSacola();
         sincFav();
@@ -709,7 +729,8 @@
     }
 
     function sincFav() {
-      const selecionados = sacola.filter(x => x.sel !== false);
+      desmarcarIndisponiveis();
+      const selecionados = sacola.filter(x => x.sel !== false && itemDisponivelSacola(x));
       const s = $('seloFav');
       s.textContent = selecionados.length;
       s.classList.toggle('on', sacola.length > 0);
@@ -727,15 +748,16 @@
 
       $('gCorpo').innerHTML = sacola.length ? sacola.map((item, idx) => {
         const x = produtoDaSacola(item);
-        if (!x) return '';
-        const isSel = item.sel !== false;
+        const disponivel = itemDisponivelSacola(item);
+        const isSel = disponivel && item.sel !== false;
+        const status = !x || !disponivel ? ' · indisponível' : '';
         return `
     <div class="fi${isSel ? '' : ' desativado'}">
-      <button class="chk${isSel ? ' on' : ''}" data-togglesacola="${idx}" title="${isSel ? 'Desmarcar item' : 'Marcar item'}">
+      <button class="chk${isSel ? ' on' : ''}"${disponivel ? ` data-togglesacola="${idx}"` : ''} title="${isSel ? 'Desmarcar item' : disponivel ? 'Marcar item' : 'Produto indisponível'}">
         <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
       </button>
-      <div class="th">${fotoHTML(x)}</div>
-      <div class="nm">${esc(x.n)}<span>Tamanho <b>${esc(item.tam)}</b> · ${rs(precoDoTamanho(x, item.tam))}</span></div>
+      <div class="th">${x ? fotoHTML(x) : ''}</div>
+      <div class="nm">${esc(x ? x.n : 'Produto indisponível')}<span>Tamanho <b>${esc(item.tam)}</b>${x && disponivel ? ' · ' + rs(precoDoTamanho(x, item.tam)) : status}</span></div>
       <button class="rm" data-remsacola="${idx}" title="Remover da sacola">✕</button>
     </div>`;
       }).join('')
@@ -757,7 +779,7 @@
 
     $('gWa').onclick = () => {
       if (!sacola.length) { aviso('Sua sacola está vazia. Escolha uma peça antes 🌼'); return; }
-      const selecionados = sacola.filter(x => x.sel !== false);
+      const selecionados = sacola.filter(x => x.sel !== false && itemDisponivelSacola(x));
       if (!selecionados.length) { aviso('Selecione pelo menos um item para comprar 🌼'); return; }
 
       const total = selecionados.reduce((a, b) => {
