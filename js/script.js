@@ -840,7 +840,7 @@
       $('tela').classList.add('on'); document.body.classList.add('trava');
     }
     function texto() {
-      return `Olá, Bloom! 🌼\nQuero essa peça:\n\n*${atual.n}*\nTamanho: ${tamSel || '(ainda escolhendo)'}\nValor: ${rs(tamSel ? precoDoTamanho(atual, tamSel) : atual.preco)}\n\n${SITE}/${atual.slug}`;
+      return `Olá, Bloom! 🌼\nQuero essa peça:\n\n*${atual.n}*\nTamanho: ${tamSel || '(ainda escolhendo)'}\nValor: ${rs(tamSel ? precoDoTamanho(atual, tamSel) : atual.preco)}\n\nhttps://${SITE}/?produto=${encodeURIComponent(atual.slug)}&codigo=${encodeURIComponent(atual.c)}`;
     }
     function msg() {
       const d = new Date();
@@ -881,6 +881,12 @@
         aplicar();
         normalizarReferenciasSacola();
         sincFav();
+        const parametrosCompartilhados = new URLSearchParams(location.search);
+        const codigoCompartilhado = parametrosCompartilhados.get('codigo');
+        const slugCompartilhado = parametrosCompartilhados.get('produto');
+        const produtoCompartilhado = (codigoCompartilhado && P.find(x => String(x.c) === codigoCompartilhado))
+          || (slugCompartilhado && P.find(x => x.slug === slugCompartilhado));
+        if (produtoCompartilhado) abrirFicha(produtoCompartilhado.i);
       })
       .catch(() => { /* mantém a página vazia até a API da hospedagem responder */ });
 
