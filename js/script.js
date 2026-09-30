@@ -349,7 +349,7 @@
     const ORDEMTAM = ['RN', 'P', 'M', 'G', 'GG', '1', '2', '3', '4', '6', '8', '10', '12', '14'];
 
     function fotoHTML(x) {
-      if (x.foto) return `<img src="${x.foto.startsWith('data:image/') ? esc(x.foto) : esc(IMG[x.foto] || '')}" alt="${esc(x.n)}" loading="lazy">`;
+      if (x.foto) return `<img src="${esc(IMG[x.foto] || x.foto)}" alt="${esc(x.n)}" loading="lazy">`;
       return `<div class="ilu" style="background:${PAL[x.ilu[1]][2]}">${ilu(x.ilu[0], x.ilu[1], x.ilu[2])}</div>`;
     }
     function filtrar() {

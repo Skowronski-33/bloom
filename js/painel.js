@@ -578,7 +578,7 @@ $('txtSalvar').onclick=async()=>{
         dados.produtos=produtos;
       }
     }
-    await salvarCatalogo(dados); DADOS.colecao=colecao; DADOS.banner=banner; fecharTextos(); aviso('Texto da vitrine atualizado');
+    await salvarCatalogo(dados); DADOS.colecao=colecao; DADOS.banner=banner; fecharTextos(); aviso('Texto e foto da vitrine atualizados');
   }catch(erro){ aviso(erro.message); }
   finally{botao.disabled=false;botao.textContent=textoBotao;}
 };
