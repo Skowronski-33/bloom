@@ -5,10 +5,8 @@
 /* ================================================================
    Painel da Bloom — catálogo real exportado do Siscom
    ================================================================ */
-const IMG={};
 const favicon=document.createElement('link');
 favicon.rel='icon'; favicon.type='image/png'; favicon.href='logo.png'; document.head.appendChild(favicon);
-document.querySelectorAll('[data-img]').forEach(e=>{if(IMG[e.dataset.img])e.src=IMG[e.dataset.img];});
 const DADOS={"loja":"Bloom baby kids","origem":"Siscom · PRODUTOS BLOOM.xls","gerado_em":"2026-08-29T11:14:11","categorias":{"calcados":"Calçados","maternidade":"Saída de maternidade","enxoval":"Enxoval e cama","banho":"Banho e higiene","alimentacao":"Chupeta e alimentação","brinquedos":"Brinquedos e livros","praia":"Praia","pijamas":"Pijamas","macacoes":"Macacões","body":"Body","vestidos":"Vestidos","saias":"Saias","casacos":"Casacos e jaquetas","calcas":"Calças e shorts","blusas":"Blusas e camisas","conjuntos":"Conjuntos","acessorios":"Acessórios"},"ordem_tamanhos":["PR","RN","P","M","G","GG","XG","U","1","2","3","4","6","8","10","12","14","19/20","21/22","23/24","25/26","27/28","29/30","31/32"],"produtos":[]};
 const CAT=DADOS.categorias;
 const ORDEM_TAM=DADOS.ordem_tamanhos;
@@ -18,6 +16,11 @@ const MIGRAR_URL='api/migrar-fotos.php';
 const API_TOKEN='4a101b70f48d54e39fa4f26e1e41325607322bdea4d3d60e';
 const COLECAO_PADRAO='Coleção Verão 2027';
 const TAMANHO_OUTRO='__outro';
+function construirCatalogo(produtos,origem='Painel administrativo'){
+  return {loja:'Bloom baby kids',origem,gerado_em:new Date().toISOString(),
+    colecao:DADOS.colecao||COLECAO_PADRAO,banner:DADOS.banner||'',
+    categorias:CAT,ordem_tamanhos:ORDEM_TAM,produtos};
+}
 let P=DADOS.produtos.map((p,i)=>({...p,i}));
 let proxCod=Math.max(...P.map(p=>p.c),0)+1;
 
@@ -219,7 +222,7 @@ document.addEventListener('click',e=>{
     const p=P[+td.dataset.todos], antes=p.v.map(v=>v.on), ligar=sit(p)==='zero';
     p.v.forEach(v=>v.on=ligar); pintar();
     const produtos=P.map(({tk,...produto})=>produto);
-    const dados={loja:'Bloom baby kids',origem:'Painel administrativo',gerado_em:new Date().toISOString(),colecao:DADOS.colecao||COLECAO_PADRAO,categorias:CAT,ordem_tamanhos:ORDEM_TAM,produtos};
+    const dados=construirCatalogo(produtos);
     salvarCatalogo(dados).then(()=>{
       aviso(ligar?`<b>${esc(p.n)}</b> voltou ao site`:`<b>${esc(p.n)}</b> saiu da vitrine`,
         ()=>{p.v.forEach((v,j)=>v.on=antes[j]);pintar();aviso('Desfeito');});
@@ -235,7 +238,7 @@ async function excluir(i){
   const p=P[i], pos=P.indexOf(p);
   if(!window.confirm(`Excluir "${p.n}"? Esta ação poderá ser desfeita apenas agora.`))return;
   P.splice(pos,1); P.forEach((x,k)=>x.i=k); S.pagina=1; pintar();
-  const dados={loja:'Bloom baby kids',origem:'Painel administrativo',gerado_em:new Date().toISOString(),colecao:DADOS.colecao||COLECAO_PADRAO,categorias:CAT,ordem_tamanhos:ORDEM_TAM,produtos:P.map(({tk,...produto})=>produto)};
+  const dados=construirCatalogo(P.map(({tk,...produto})=>produto));
   try{
     await salvarCatalogo(dados);
     aviso(`<b>${esc(p.n)}</b> excluída`,async()=>{
@@ -264,25 +267,13 @@ function abrirEditor(i){
   $('edCat').value=rascunho.cat||'macacoes';
   $('edCor').value=rascunho.cor||'';
   $('edCod').value=rascunho.c||'';
-  fotoPendente=null;
-  atualizarFotoPrevia(rascunho.foto||'');
+  fotoUploader.estado.pendente=null;
+  fotoUploader.atualizarPrevia(rascunho.foto||'');
   $('edExcluir').style.display=i===null?'none':'';
   $('msgNome').classList.remove('on'); $('msgVar').classList.remove('on');
   $('edNome').classList.remove('erro');
   pintarGrade();
   $('telaEd').classList.add('on'); document.body.classList.add('trava');
-}
-function atualizarFotoPrevia(src){
-  rascunho.foto=src||'';
-  if(src){
-    $('edFotoImg').src=src;
-    $('edFotoPrevia').classList.add('on');
-    $('edFotoUpload').style.display='none';
-  }else{
-    $('edFotoImg').src='';
-    $('edFotoPrevia').classList.remove('on');
-    $('edFotoUpload').style.display='flex';
-  }
 }
 function comprimirImagem(file,maxDim=800,qualidade=0.85){
   return new Promise((resolve,reject)=>{
@@ -327,36 +318,53 @@ async function lerComoDataUrl(f){
     r.readAsDataURL(f);
   });
 }
-let fotoPendente=null;
-async function processarFotoSelecionada(f){
-  let dataUrl;
-  try{ dataUrl=await comprimirImagem(f); }
-  catch(err){ dataUrl=await lerComoDataUrl(f); }
-  atualizarFotoPrevia(dataUrl);
-  const promessa=enviarImagem(dataUrl,'produtos').then(url=>{rascunho.foto=url;return url;});
-  fotoPendente=promessa;
-  promessa.catch(()=>{});
-}
-$('edFotoUpload').onclick=()=>$('edFotoArq').click();
-$('btEscolherFoto').onclick=()=>$('edFotoArq').click();
-$('edFotoArq').onchange=async e=>{
-  const f=e.target.files[0];
-  if(f)await processarFotoSelecionada(f);
-};
-['dragenter','dragover'].forEach(t=>$('edFotoBox').addEventListener(t,e=>{e.preventDefault();$('edFotoBox').classList.add('sobre');}));
-['dragleave','drop'].forEach(t=>$('edFotoBox').addEventListener(t,e=>{e.preventDefault();$('edFotoBox').classList.remove('sobre');}));
-$('edFotoBox').addEventListener('drop',async e=>{
-  if(e.dataTransfer.files[0]){
-    const f=e.dataTransfer.files[0];
-    if(f.type.startsWith('image/'))await processarFotoSelecionada(f);
+/* Liga uma caixa de foto (clique/arraste/remover) ao upload — usado pela foto da peça e pelo banner. */
+function configurarUploadImagem({box,previa,img,upload,arquivo,btEscolher,btRemover,pasta,maxDim=800,qualidade=0.85,aoDefinir}){
+  const estado={pendente:null};
+  function atualizarPrevia(src){
+    aoDefinir(src||'');
+    if(src){
+      img.src=src; previa.classList.add('on'); upload.style.display='none';
+    }else{
+      img.src=''; previa.classList.remove('on'); upload.style.display='flex';
+    }
   }
+  async function processar(f){
+    let dataUrl;
+    try{ dataUrl=await comprimirImagem(f,maxDim,qualidade); }
+    catch(err){ dataUrl=await lerComoDataUrl(f); }
+    atualizarPrevia(dataUrl);
+    const promessa=enviarImagem(dataUrl,pasta).then(url=>{
+      if(estado.pendente===promessa)aoDefinir(url);
+      return url;
+    });
+    estado.pendente=promessa;
+    promessa.catch(()=>{});
+  }
+  upload.onclick=()=>arquivo.click();
+  if(btEscolher)btEscolher.onclick=()=>arquivo.click();
+  arquivo.onchange=async e=>{const f=e.target.files[0]; if(f)await processar(f);};
+  ['dragenter','dragover'].forEach(t=>box.addEventListener(t,e=>{e.preventDefault();box.classList.add('sobre');}));
+  ['dragleave','drop'].forEach(t=>box.addEventListener(t,e=>{e.preventDefault();box.classList.remove('sobre');}));
+  box.addEventListener('drop',async e=>{
+    if(e.dataTransfer.files[0]){
+      const f=e.dataTransfer.files[0];
+      if(f.type.startsWith('image/'))await processar(f);
+    }
+  });
+  if(btRemover)btRemover.onclick=e=>{
+    e.stopPropagation();
+    arquivo.value='';
+    estado.pendente=null;
+    atualizarPrevia('');
+  };
+  return {estado,atualizarPrevia};
+}
+const fotoUploader=configurarUploadImagem({
+  box:$('edFotoBox'),previa:$('edFotoPrevia'),img:$('edFotoImg'),upload:$('edFotoUpload'),
+  arquivo:$('edFotoArq'),btEscolher:$('btEscolherFoto'),btRemover:$('btRemFoto'),
+  pasta:'produtos',aoDefinir:src=>{if(rascunho)rascunho.foto=src;}
 });
-$('btRemFoto').onclick=e=>{
-  e.stopPropagation();
-  $('edFotoArq').value='';
-  fotoPendente=null;
-  atualizarFotoPrevia('');
-};
 function prepararTamanhos(){
   $('novoTam').innerHTML='<option value="">Selecione o tamanho</option>'
     +ORDEM_TAM.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('')
@@ -427,15 +435,15 @@ $('edSalvar').onclick=async()=>{
   const textoBotao=botao.textContent;
   botao.disabled=true;
   try{
-    if(fotoPendente){
+    if(fotoUploader.estado.pendente){
       botao.textContent='Enviando foto…';
-      try{ await fotoPendente; }
+      try{ await fotoUploader.estado.pendente; }
       catch(erro){ throw new Error('Não foi possível enviar a foto: '+erro.message); }
-      fotoPendente=null;
+      fotoUploader.estado.pendente=null;
     }
     botao.textContent=textoBotao;
     const produtos=P.map(({tk,...produto})=>produto);
-    const dados={loja:'Bloom baby kids',origem:'Painel administrativo',gerado_em:new Date().toISOString(),colecao:DADOS.colecao||COLECAO_PADRAO,categorias:CAT,ordem_tamanhos:ORDEM_TAM,produtos};
+    const dados=construirCatalogo(produtos);
     await salvarCatalogo(dados);
     fecharEditor(); S.pagina=1; pintar();
     aviso(`<b>${esc(rascunho.n)}</b> ${editando===null?'cadastrada':'atualizada'}`);
@@ -454,7 +462,7 @@ $('btNova').onclick=()=>abrirEditor(null);
 $('btImportar').onclick=()=>{$('telaImp').classList.add('on');document.body.classList.add('trava');};
 $('btExportar').onclick=()=>{
   const produtos=P.map(({tk,...produto})=>produto);
-  const dados={loja:'Bloom baby kids',origem:'Backup local',gerado_em:new Date().toISOString(),colecao:DADOS.colecao||COLECAO_PADRAO,categorias:CAT,ordem_tamanhos:ORDEM_TAM,produtos};
+  const dados=construirCatalogo(produtos,'Backup local');
   const arquivo=new Blob([JSON.stringify(dados,null,2)],{type:'application/json;charset=utf-8'});
   const url=URL.createObjectURL(arquivo), link=document.createElement('a');
   link.href=url; link.download=`bloom-catalogo-${new Date().toISOString().slice(0,10)}.json`;
@@ -465,7 +473,7 @@ $('btLimpar').onclick=async()=>{
   if(!quantidade){aviso('A lista de produtos já está vazia');return;}
   if(!window.confirm(`Limpar os ${quantidade} produtos do painel? Faça um backup antes. Esta ação não pode ser desfeita.`))return;
   const botao=$('btLimpar');
-  const dados={loja:'Bloom baby kids',origem:'Painel administrativo',gerado_em:new Date().toISOString(),colecao:DADOS.colecao||COLECAO_PADRAO,categorias:CAT,ordem_tamanhos:ORDEM_TAM,produtos:[]};
+  const dados=construirCatalogo([]);
   botao.disabled=true;
   try{
     await salvarCatalogo(dados);
@@ -483,7 +491,13 @@ $('btOtimizar').onclick=async()=>{
       throw new Error(resultado&&resultado.erro||'Não foi possível otimizar as fotos.');
     }
     if(resultado.fotos_migradas>0){
-      await carregarCatalogo();
+      if(Array.isArray(resultado.produtos)){
+        P=resultado.produtos.map((p,i)=>indexarProduto({...p,i}));
+        proxCod=Math.max(...P.map(p=>p.c),0)+1;
+      }
+      if(typeof resultado.colecao==='string')DADOS.colecao=resultado.colecao;
+      if(typeof resultado.banner==='string')DADOS.banner=resultado.banner;
+      pintar();
       aviso(`${resultado.fotos_migradas} foto(s) movida(s) para arquivos — catálogo ficou bem mais leve`);
     }else{
       aviso('Nenhuma foto precisava ser otimizada');
@@ -495,28 +509,21 @@ function fecharImp(){$('telaImp').classList.remove('on');document.body.classList
 $('impFechar').onclick=fecharImp; $('impCancelar').onclick=fecharImp;
 $('telaImp').onclick=e=>{if(e.target===$('telaImp'))fecharImp();};
 let bannerRascunho='';
-function atualizarBannerPrevia(src){
-  bannerRascunho=src||'';
-  if(src){
-    $('txtBannerImg').src=src;
-    $('txtBannerPrevia').classList.add('on');
-    $('txtBannerUpload').style.display='none';
-  }else{
-    $('txtBannerImg').src='';
-    $('txtBannerPrevia').classList.remove('on');
-    $('txtBannerUpload').style.display='flex';
-  }
-}
+const bannerUploader=configurarUploadImagem({
+  box:$('txtBannerBox'),previa:$('txtBannerPrevia'),img:$('txtBannerImg'),upload:$('txtBannerUpload'),
+  arquivo:$('txtBannerArq'),btEscolher:$('btEscolherBanner'),btRemover:$('btRemBanner'),
+  pasta:'banner',maxDim:1000,aoDefinir:src=>{bannerRascunho=src;}
+});
 $('btTextos').onclick=()=>{
   $('txtColecao').value=DADOS.colecao||COLECAO_PADRAO;
-  bannerPendente=null;
-  atualizarBannerPrevia(DADOS.banner||'');
+  bannerUploader.estado.pendente=null;
+  bannerUploader.atualizarPrevia(DADOS.banner||'');
   fetch(API_URL,{cache:'no-store'}).then(r=>r.ok?r.json():null).then(atual=>{
     if(atual&&typeof atual.colecao==='string'){
       DADOS.colecao=atual.colecao; $('txtColecao').value=atual.colecao||COLECAO_PADRAO;
     }
     if(atual&&typeof atual.banner==='string'){
-      DADOS.banner=atual.banner; atualizarBannerPrevia(atual.banner);
+      DADOS.banner=atual.banner; bannerUploader.atualizarPrevia(atual.banner);
     }
   }).catch(()=>{});
   $('telaTextos').classList.add('on'); document.body.classList.add('trava');
@@ -524,52 +531,22 @@ $('btTextos').onclick=()=>{
 function fecharTextos(){$('telaTextos').classList.remove('on');document.body.classList.remove('trava');}
 $('txtFechar').onclick=fecharTextos; $('txtCancelar').onclick=fecharTextos;
 $('telaTextos').onclick=e=>{if(e.target===$('telaTextos'))fecharTextos();};
-let bannerPendente=null;
-async function processarBannerSelecionado(f){
-  let dataUrl;
-  try{ dataUrl=await comprimirImagem(f,1000,0.85); }
-  catch(err){ dataUrl=await lerComoDataUrl(f); }
-  atualizarBannerPrevia(dataUrl);
-  const promessa=enviarImagem(dataUrl,'banner').then(url=>{bannerRascunho=url;return url;});
-  bannerPendente=promessa;
-  promessa.catch(()=>{});
-}
-$('txtBannerUpload').onclick=()=>$('txtBannerArq').click();
-$('btEscolherBanner').onclick=()=>$('txtBannerArq').click();
-$('txtBannerArq').onchange=async e=>{
-  const f=e.target.files[0];
-  if(f)await processarBannerSelecionado(f);
-};
-['dragenter','dragover'].forEach(t=>$('txtBannerBox').addEventListener(t,e=>{e.preventDefault();$('txtBannerBox').classList.add('sobre');}));
-['dragleave','drop'].forEach(t=>$('txtBannerBox').addEventListener(t,e=>{e.preventDefault();$('txtBannerBox').classList.remove('sobre');}));
-$('txtBannerBox').addEventListener('drop',async e=>{
-  if(e.dataTransfer.files[0]){
-    const f=e.dataTransfer.files[0];
-    if(f.type.startsWith('image/'))await processarBannerSelecionado(f);
-  }
-});
-$('btRemBanner').onclick=e=>{
-  e.stopPropagation();
-  $('txtBannerArq').value='';
-  bannerPendente=null;
-  atualizarBannerPrevia('');
-};
 $('txtSalvar').onclick=async()=>{
   const colecao=$('txtColecao').value.trim()||COLECAO_PADRAO;
   const botao=$('txtSalvar');
   const textoBotao=botao.textContent;
   botao.disabled=true;
   try{
-    if(bannerPendente){
+    if(bannerUploader.estado.pendente){
       botao.textContent='Enviando banner…';
-      try{ await bannerPendente; }
+      try{ await bannerUploader.estado.pendente; }
       catch(erro){ throw new Error('Não foi possível enviar o banner: '+erro.message); }
-      bannerPendente=null;
+      bannerUploader.estado.pendente=null;
       botao.textContent=textoBotao;
     }
     const banner=bannerRascunho;
     let produtos=P.map(({tk,...produto})=>produto);
-    const dados={loja:'Bloom baby kids',origem:'Painel administrativo',gerado_em:new Date().toISOString(),colecao,banner,categorias:CAT,ordem_tamanhos:ORDEM_TAM,produtos};
+    const dados={...construirCatalogo(produtos),colecao,banner};
     if(!produtos.length){
       const resposta=await fetch(API_URL,{cache:'no-store'});
       const atual=await resposta.json();
@@ -641,7 +618,7 @@ function importarPlanilha(f){
           produtosPorCodigo.set(novo.c,{...antigo,...novo,n:novo.n||antigo.n||`Peça ${novo.c}`,cat:antigo.cat&&antigo.cat!=='acessorios'?antigo.cat:inferirCategoria(novo.n),cor:antigo.cor||'',bruto:antigo.bruto||novo.n.toUpperCase(),v,pmin:Math.min(...v.map(x=>x.p)),pmax:Math.max(...v.map(x=>x.p)),est:v.reduce((s,x)=>s+x.q,0)});
         });
         const produtos=[...produtosPorCodigo.values()];
-        resolve({loja:'Bloom baby kids',origem:`Siscom · ${f.name}`,gerado_em:new Date().toISOString(),colecao:DADOS.colecao||COLECAO_PADRAO,categorias:CAT,ordem_tamanhos:ORDEM_TAM,produtos});
+        resolve(construirCatalogo(produtos,`Siscom · ${f.name}`));
       }catch(erro){reject(erro);}
     };
     leitor.onerror=()=>reject(new Error('Não foi possível ler o arquivo.'));
@@ -693,6 +670,7 @@ async function carregarCatalogo(){
     const dados=await resposta.json();
     if(!Array.isArray(dados.produtos))return;
     if(typeof dados.colecao==='string')DADOS.colecao=dados.colecao;
+    if(typeof dados.banner==='string')DADOS.banner=dados.banner;
     P=dados.produtos.map((p,i)=>indexarProduto({...p,i}));
     proxCod=Math.max(...P.map(p=>p.c),0)+1;
     pintar();

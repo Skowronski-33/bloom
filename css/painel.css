@@ -53,7 +53,7 @@ select{
 .topo{position:sticky;top:0;z-index:50;background:rgba(255,249,232,.94);
   backdrop-filter:blur(14px);border-bottom:1.5px solid var(--linha)}
 .topo .l1{display:flex;align-items:center;gap:12px;padding:11px 0}
-.topo img{height:38px}
+.topo img{height:38px;width:auto}
 .acoes{display:flex;align-items:center;gap:8px}
 .marca{display:flex;flex-direction:column;line-height:1.1}
 .marca b{font-family:var(--disp);font-size:15px}
@@ -99,7 +99,7 @@ select.sel{padding:10px 13px;border-radius:99px;border:2px solid var(--linha);ba
   .topo .l1>.marca{grid-area:marca}
   .topo .l1>.esp{display:none}
   .acoes{grid-area:acoes;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;width:100%}
-  .topo img{height:31px}
+  .topo img{height:31px;width:auto}
   .marca{min-width:50px}
   .marca b{font-size:12px}
   .marca span{font-size:8px}

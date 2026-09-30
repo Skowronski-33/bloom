@@ -1,105 +1,27 @@
 <?php
 declare(strict_types=1);
 
-header('Content-Type: application/json; charset=utf-8');
-$origemPermitida = 'https://bloombabyekids.com.br';
-$origem = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
-if ($origem === $origemPermitida) {
-    header('Access-Control-Allow-Origin: ' . $origemPermitida);
-    header('Vary: Origin');
-}
-header('Access-Control-Allow-Headers: Content-Type, X-Bloom-Token');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('X-Content-Type-Options: nosniff');
-header('X-Frame-Options: DENY');
-header('Referrer-Policy: strict-origin-when-cross-origin');
-if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
-    header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
-}
-
-$metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-if (!in_array($metodo, ['POST', 'OPTIONS'], true)) {
-    http_response_code(405);
-    header('Allow: POST, OPTIONS');
-    echo json_encode(['erro' => 'Método não permitido.']);
-    exit;
-}
-
-if ($metodo === 'OPTIONS') {
-    http_response_code(204);
-    exit;
-}
-
-if ($origem !== '' && $origem !== $origemPermitida) {
-    http_response_code(403);
-    echo json_encode(['erro' => 'Origem não autorizada.']);
-    exit;
-}
-
-session_set_cookie_params([
-    'lifetime' => 0,
-    'path' => '/',
-    'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
-    'httponly' => true,
-    'samesite' => 'Lax',
-]);
-session_start();
-if (empty($_SESSION['bloom_admin_authenticated'])) {
-    http_response_code(401);
-    echo json_encode(['erro' => 'Acesso administrativo necessário.']);
-    exit;
-}
-
-$configFile = __DIR__ . '/config.php';
-if (!is_file($configFile)) {
-    http_response_code(500);
-    echo json_encode(['erro' => 'Configure api/config.php na hospedagem.']);
-    exit;
-}
-
-$config = require $configFile;
-
-$token = (string) ($config['token'] ?? '');
-$providedToken = (string) ($_SERVER['HTTP_X_BLOOM_TOKEN'] ?? '');
-if ($token === '' || !hash_equals($token, $providedToken)) {
-    http_response_code(403);
-    echo json_encode(['erro' => 'Token da API inválido.']);
-    exit;
-}
+require __DIR__ . '/_bootstrap.php';
+require __DIR__ . '/_imagens.php';
+$contexto = bloomIniciar(['POST', 'OPTIONS']);
+$config = $contexto['config'];
 
 /**
  * Se o valor for uma imagem embutida em base64, salva como arquivo em /uploads
- * e devolve o caminho relativo. Caso contrário (já é um caminho, ou está vazio),
- * devolve o valor original sem alteração — por isso é seguro rodar mais de uma vez.
+ * e devolve o caminho relativo. Caso contrário (já é um caminho, está vazio, ou
+ * a imagem é inválida demais para salvar), devolve o valor original sem
+ * alteração — por isso é seguro rodar mais de uma vez.
  */
 function migrarCampoImagem(string $valor, string $pasta): string
 {
-    if (!preg_match('/^data:image\/(png|jpe?g|webp);base64,(.+)$/', $valor, $m)) {
+    if (!str_starts_with($valor, 'data:image/')) {
         return $valor;
     }
-    $binario = base64_decode($m[2], true);
-    if ($binario === false || $binario === '') {
+    try {
+        return bloomSalvarImagemBase64($valor, $pasta);
+    } catch (Throwable $erro) {
         return $valor;
     }
-    $info = @getimagesizefromstring($binario);
-    if ($info === false) {
-        return $valor;
-    }
-    $extensoes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-    $extensao = $extensoes[$info['mime']] ?? null;
-    if ($extensao === null) {
-        return $valor;
-    }
-    $nomeArquivo = substr(hash('sha256', $binario), 0, 32) . '.' . $extensao;
-    $pastaBase = __DIR__ . '/../uploads/' . $pasta;
-    if (!is_dir($pastaBase) && !@mkdir($pastaBase, 0755, true) && !is_dir($pastaBase)) {
-        return $valor;
-    }
-    $caminhoArquivo = $pastaBase . '/' . $nomeArquivo;
-    if (!is_file($caminhoArquivo) && file_put_contents($caminhoArquivo, $binario, LOCK_EX) === false) {
-        return $valor;
-    }
-    return 'uploads/' . $pasta . '/' . $nomeArquivo;
 }
 
 try {
@@ -161,6 +83,9 @@ try {
         'fotos_migradas' => $migradas,
         'tamanho_antes' => $tamanhoAntes,
         'tamanho_depois' => $tamanhoDepois,
+        'colecao' => $dados['colecao'] ?? null,
+        'banner' => $dados['banner'] ?? null,
+        'produtos' => $dados['produtos'] ?? [],
     ]);
 } catch (Throwable $erro) {
     http_response_code(500);

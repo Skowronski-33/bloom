@@ -34,6 +34,8 @@ public_html/
     ├── catalogo.php
     ├── upload.php
     ├── migrar-fotos.php
+    ├── _bootstrap.php
+    ├── _imagens.php
     ├── config.php
     └── schema.sql
 ```

@@ -1629,6 +1629,7 @@
 
     footer .logo-f {
       height: 52px;
+      width: auto;
       margin-bottom: 14px
     }
 
