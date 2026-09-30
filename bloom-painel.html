@@ -16,13 +16,13 @@
   <link rel="stylesheet" href="css/painel.css?v=prod4">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="js/auth-guard.js"></script>
-  <script src="js/painel.js?v=prod10" defer></script>
+  <script src="js/painel.js?v=prod13" defer></script>
 </head>
 <body>
 
 <header class="topo">
   <div class="wrap l1">
-    <img data-img="logo" alt="Bloom baby kids">
+    <img src="logo.png" width="290" height="160" alt="Bloom baby kids">
     <div class="marca"><b>Bloom baby kids</b><span>Painel</span></div>
     <div class="esp"></div>
     <div class="acoes">
@@ -41,6 +41,10 @@
       <button class="bt bt-linha bt-p bt-ruim" id="btLimpar" title="Apagar todos os produtos">
         <svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
         <span class="soDesk">Limpar</span>
+      </button>
+      <button class="bt bt-linha bt-p" id="btOtimizar" title="Move fotos antigas do catálogo para arquivos, deixando o salvamento mais leve">
+        <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>
+        <span class="soDesk">Otimizar fotos</span>
       </button>
       <button class="bt bt-linha bt-p" id="btTextos" title="Editar textos da vitrine">
         <svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h10M4 19h7"/></svg>
@@ -190,6 +194,28 @@
       <button class="icone" id="txtFechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div class="fc">
+      <div class="campo">
+        <label>Imagem de destaque (banner)</label>
+        <div class="foto-box" id="txtBannerBox">
+          <div class="foto-previa" id="txtBannerPrevia">
+            <img id="txtBannerImg" src="" alt="Banner da página inicial">
+            <button type="button" class="bt-rem-foto" id="btRemBanner" title="Remover banner">✕</button>
+          </div>
+          <div class="foto-upload" id="txtBannerUpload">
+            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <b>Adicionar banner</b>
+            <span>Toque para escolher a foto no dispositivo</span>
+          </div>
+        </div>
+        <input type="file" id="txtBannerArq" accept="image/*" hidden>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+          <button type="button" class="bt bt-linha bt-p" id="btEscolherBanner" style="flex:none;min-height:34px;padding:6px 14px;font-size:12.5px">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            Escolher foto
+          </button>
+        </div>
+        <p class="dica">Aparece na foto grande da página inicial. Se não escolher nenhuma, a foto padrão do site continua.</p>
+      </div>
       <div class="campo">
         <label for="txtColecao">Chamada da coleção</label>
         <input type="text" id="txtColecao" maxlength="60" placeholder="Coleção Verão 2027">

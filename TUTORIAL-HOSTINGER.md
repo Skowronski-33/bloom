@@ -26,12 +26,19 @@ public_html/
 ├── css/
 ├── js/
 │   └── auth-guard.js
+├── uploads/
+│   ├── produtos/
+│   └── banner/
 └── api/
     ├── auth.php
     ├── catalogo.php
+    ├── upload.php
+    ├── migrar-fotos.php
     ├── config.php
     └── schema.sql
 ```
+
+A pasta `uploads/` guarda as fotos enviadas pelo painel (produto e banner) como arquivos comuns, em vez de dentro do catálogo. Ela precisa ter permissão de escrita (normalmente 755 já funciona na Hostinger).
 
 O arquivo `config.example.php` é apenas um modelo. Depois de enviar a pasta `api`, faça uma cópia dele com o nome `config.php`.
 
@@ -115,6 +122,10 @@ Confira o usuário `BloomAdm` e o valor de `admin_password_hash` no `api/config.
 ### A vitrine continua mostrando produtos antigos
 
 Faça uma atualização forçada do navegador. Se continuar, abra a URL da API e verifique se o JSON contém os produtos importados.
+
+### "Não foi possível processar a solicitação" ao cadastrar peça
+
+O catálogo é salvo inteiro a cada alteração, e o servidor recusa gravações acima de 15 MB. Se as fotos dos produtos foram cadastradas há um tempo (antes da pasta `uploads/` existir), elas podem estar guardadas dentro do próprio catálogo e ocupar bastante espaço. Abra o painel e clique em **Otimizar fotos** (no topo) — isso move as fotos antigas para arquivos comuns em `uploads/` e reduz bastante o tamanho do catálogo salvo. Pode clicar mais de uma vez sem problema, só faz efeito quando encontra foto antiga.
 
 ### A planilha não é aceita
 

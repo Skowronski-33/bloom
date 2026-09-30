@@ -85,6 +85,15 @@ function validarNumero(mixed $valor, float $minimo, float $maximo): bool
 
 function validarCatalogo(array $dados): void
 {
+    if (array_key_exists('colecao', $dados)
+        && (!is_string($dados['colecao']) || strlen($dados['colecao']) > 200)) {
+        throw new InvalidArgumentException('Texto da coleção inválido.');
+    }
+    if (array_key_exists('banner', $dados)
+        && (!is_string($dados['banner']) || strlen($dados['banner']) > 5 * 1024 * 1024)) {
+        throw new InvalidArgumentException('Banner inválido.');
+    }
+
     $produtos = $dados['produtos'] ?? null;
     if (!is_array($produtos) || count($produtos) > 2000) {
         throw new InvalidArgumentException('Quantidade de produtos inválida.');
