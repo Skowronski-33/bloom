@@ -42,6 +42,17 @@ function validarCatalogo(array $dados): void
         throw new InvalidArgumentException('Banner inválido.');
     }
 
+    if (array_key_exists('excluidos', $dados)) {
+        if (!is_array($dados['excluidos']) || count($dados['excluidos']) > 5000) {
+            throw new InvalidArgumentException('Lista de excluídos inválida.');
+        }
+        foreach ($dados['excluidos'] as $codigo) {
+            if (!validarNumero($codigo, 1, 2147483647)) {
+                throw new InvalidArgumentException('Código excluído inválido.');
+            }
+        }
+    }
+
     $produtos = $dados['produtos'] ?? null;
     if (!is_array($produtos) || count($produtos) > 2000) {
         throw new InvalidArgumentException('Quantidade de produtos inválida.');

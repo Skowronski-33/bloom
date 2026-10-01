@@ -19,8 +19,9 @@ const TAMANHO_OUTRO='__outro';
 function construirCatalogo(produtos,origem='Painel administrativo'){
   return {loja:'Bloom baby kids',origem,gerado_em:new Date().toISOString(),
     colecao:DADOS.colecao||COLECAO_PADRAO,banner:DADOS.banner||'',
-    categorias:CAT,ordem_tamanhos:ORDEM_TAM,produtos};
+    categorias:CAT,ordem_tamanhos:ORDEM_TAM,excluidos:[...EXCLUIDOS],produtos};
 }
+let EXCLUIDOS=new Set((DADOS.excluidos||[]).map(Number));
 let P=DADOS.produtos.map((p,i)=>({...p,i}));
 let proxCod=Math.max(...P.map(p=>p.c),0)+1;
 
@@ -245,22 +246,22 @@ document.addEventListener('click',e=>{
 async function excluir(i){
   const p=P[i], pos=P.indexOf(p);
   if(!window.confirm(`Excluir "${p.n}"? Esta ação poderá ser desfeita apenas agora.`))return;
-  P.splice(pos,1); P.forEach((x,k)=>x.i=k); S.pagina=1; pintar();
+  P.splice(pos,1); P.forEach((x,k)=>x.i=k); S.pagina=1; EXCLUIDOS.add(p.c); pintar();
   const dados=construirCatalogo(P.map(({tk,...produto})=>produto));
   try{
     await salvarCatalogo(dados);
     aviso(`<b>${esc(p.n)}</b> excluída`,async()=>{
-      P.splice(pos,0,p); P.forEach((x,k)=>x.i=k); pintar();
+      P.splice(pos,0,p); P.forEach((x,k)=>x.i=k); EXCLUIDOS.delete(p.c); pintar();
       try{
-        const restaurado={...dados,gerado_em:new Date().toISOString(),produtos:P.map(({tk,...produto})=>produto)};
+        const restaurado={...dados,excluidos:[...EXCLUIDOS],gerado_em:new Date().toISOString(),produtos:P.map(({tk,...produto})=>produto)};
         await salvarCatalogo(restaurado);
         aviso('Exclusão desfeita');
       }catch(erro){
-        P.splice(pos,1); P.forEach((x,k)=>x.i=k); pintar(); aviso(erro.message);
+        P.splice(pos,1); P.forEach((x,k)=>x.i=k); EXCLUIDOS.add(p.c); pintar(); aviso(erro.message);
       }
     });
   }catch(erro){
-    P.splice(pos,0,p); P.forEach((x,k)=>x.i=k); pintar(); aviso(erro.message);
+    P.splice(pos,0,p); P.forEach((x,k)=>x.i=k); EXCLUIDOS.delete(p.c); pintar(); aviso(erro.message);
   }
 }
 
@@ -481,20 +482,23 @@ $('btLimpar').onclick=async()=>{
   if(!quantidade){aviso('A lista de produtos já está vazia');return;}
   if(!window.confirm(`Limpar os ${quantidade} produtos do painel? Faça um backup antes. Esta ação não pode ser desfeita.`))return;
   const botao=$('btLimpar');
+  const excluidosAnterior=new Set(EXCLUIDOS);
+  EXCLUIDOS=new Set();
   const dados=construirCatalogo([]);
   botao.disabled=true;
   try{
     await salvarCatalogo(dados);
     P=[]; DADOS.produtos=[]; proxCod=1; S.pagina=1; pintar(); aviso('Lista de produtos limpa');
-  }catch(erro){aviso(erro.message);}
+  }catch(erro){EXCLUIDOS=excluidosAnterior; aviso(erro.message);}
   finally{botao.disabled=false;}
 };
 $('btExcluirEsgotados').onclick=async()=>{
   const alvo=P.filter(p=>sit(p)!=='ok');
   if(!alvo.length){aviso('Nenhuma peça esgotada ou fora do site');return;}
   if(!window.confirm(`Excluir definitivamente ${alvo.length} peça(s) com tamanho esgotado ou fora do site? Esta ação não poderá ser desfeita.`))return;
-  const listaAnterior=P;
-  P=P.filter(p=>sit(p)==='ok'); P.forEach((x,k)=>x.i=k); S.pagina=1; pintar();
+  const listaAnterior=P, excluidosAnterior=new Set(EXCLUIDOS);
+  P=P.filter(p=>sit(p)==='ok'); P.forEach((x,k)=>x.i=k); S.pagina=1;
+  alvo.forEach(p=>EXCLUIDOS.add(p.c)); pintar();
   const dados=construirCatalogo(P.map(({tk,...produto})=>produto));
   const botao=$('btExcluirEsgotados');
   botao.disabled=true;
@@ -502,7 +506,24 @@ $('btExcluirEsgotados').onclick=async()=>{
     await salvarCatalogo(dados);
     aviso(`${alvo.length} peça(s) excluída(s) definitivamente`);
   }catch(erro){
-    P=listaAnterior; P.forEach((x,k)=>x.i=k); pintar(); aviso(erro.message);
+    P=listaAnterior; EXCLUIDOS=excluidosAnterior; P.forEach((x,k)=>x.i=k); pintar(); aviso(erro.message);
+  }finally{botao.disabled=false;}
+};
+$('btExcluirSemFoto').onclick=async()=>{
+  const alvo=P.filter(p=>!p.foto);
+  if(!alvo.length){aviso('Nenhuma peça sem foto');return;}
+  if(!window.confirm(`Excluir definitivamente ${alvo.length} peça(s) sem foto cadastrada? Esta ação não poderá ser desfeita.`))return;
+  const listaAnterior=P, excluidosAnterior=new Set(EXCLUIDOS);
+  P=P.filter(p=>p.foto); P.forEach((x,k)=>x.i=k); S.pagina=1;
+  alvo.forEach(p=>EXCLUIDOS.add(p.c)); pintar();
+  const dados=construirCatalogo(P.map(({tk,...produto})=>produto));
+  const botao=$('btExcluirSemFoto');
+  botao.disabled=true;
+  try{
+    await salvarCatalogo(dados);
+    aviso(`${alvo.length} peça(s) sem foto excluída(s) definitivamente`);
+  }catch(erro){
+    P=listaAnterior; EXCLUIDOS=excluidosAnterior; P.forEach((x,k)=>x.i=k); pintar(); aviso(erro.message);
   }finally{botao.disabled=false;}
 };
 $('btOtimizar').onclick=async()=>{
@@ -636,6 +657,7 @@ function importarPlanilha(f){
         const antigos=new Map(P.map(p=>[p.c,p]));
         const produtosPorCodigo=new Map(antigos);
         agrupado.forEach(novo=>{
+          if(EXCLUIDOS.has(novo.c))return;
           const antigo=antigos.get(novo.c)||{};
           const v=novo.v.filter(v=>v.p>0);
           if(!v.length)return;
@@ -695,6 +717,7 @@ async function carregarCatalogo(){
     if(!Array.isArray(dados.produtos))return;
     if(typeof dados.colecao==='string')DADOS.colecao=dados.colecao;
     if(typeof dados.banner==='string')DADOS.banner=dados.banner;
+    if(Array.isArray(dados.excluidos))EXCLUIDOS=new Set(dados.excluidos.map(Number));
     P=dados.produtos.map((p,i)=>indexarProduto({...p,i}));
     proxCod=Math.max(...P.map(p=>p.c),0)+1;
     pintar();
