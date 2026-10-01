@@ -489,7 +489,6 @@ $('btLimpar').onclick=async()=>{
   }catch(erro){aviso(erro.message);}
   finally{botao.disabled=false;}
 };
-/*
 $('btExcluirEsgotados').onclick=async()=>{
   const alvo=P.filter(p=>sit(p)!=='ok');
   if(!alvo.length){aviso('Nenhuma peça esgotada ou fora do site');return;}
@@ -539,7 +538,6 @@ $('btOtimizar').onclick=async()=>{
   }catch(erro){aviso(erro.message);}
   finally{botao.disabled=false;}
 };
-*/
 function fecharImp(){$('telaImp').classList.remove('on');document.body.classList.remove('trava');$('impResultado').innerHTML='';}
 $('impFechar').onclick=fecharImp; $('impCancelar').onclick=fecharImp;
 $('telaImp').onclick=e=>{if(e.target===$('telaImp'))fecharImp();};
