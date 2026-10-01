@@ -12,7 +12,6 @@ const CAT=DADOS.categorias;
 const ORDEM_TAM=DADOS.ordem_tamanhos;
 const API_URL='api/catalogo.php';
 const UPLOAD_URL='api/upload.php';
-const MIGRAR_URL='api/migrar-fotos.php';
 const API_TOKEN='4a101b70f48d54e39fa4f26e1e41325607322bdea4d3d60e';
 const COLECAO_PADRAO='Coleção Verão 2027';
 const TAMANHO_OUTRO='__outro';
@@ -490,64 +489,6 @@ $('btLimpar').onclick=async()=>{
     await salvarCatalogo(dados);
     P=[]; DADOS.produtos=[]; proxCod=1; S.pagina=1; pintar(); aviso('Lista de produtos limpa');
   }catch(erro){EXCLUIDOS=excluidosAnterior; aviso(erro.message);}
-  finally{botao.disabled=false;}
-};
-$('btExcluirEsgotados').onclick=async()=>{
-  const alvo=P.filter(p=>sit(p)!=='ok');
-  if(!alvo.length){aviso('Nenhuma peça esgotada ou fora do site');return;}
-  if(!window.confirm(`Excluir definitivamente ${alvo.length} peça(s) com tamanho esgotado ou fora do site? Esta ação não poderá ser desfeita.`))return;
-  const listaAnterior=P, excluidosAnterior=new Set(EXCLUIDOS);
-  P=P.filter(p=>sit(p)==='ok'); P.forEach((x,k)=>x.i=k); S.pagina=1;
-  alvo.forEach(p=>EXCLUIDOS.add(p.c)); pintar();
-  const dados=construirCatalogo(P.map(({tk,...produto})=>produto));
-  const botao=$('btExcluirEsgotados');
-  botao.disabled=true;
-  try{
-    await salvarCatalogo(dados);
-    aviso(`${alvo.length} peça(s) excluída(s) definitivamente`);
-  }catch(erro){
-    P=listaAnterior; EXCLUIDOS=excluidosAnterior; P.forEach((x,k)=>x.i=k); pintar(); aviso(erro.message);
-  }finally{botao.disabled=false;}
-};
-$('btExcluirSemFoto').onclick=async()=>{
-  const alvo=P.filter(p=>!p.foto);
-  if(!alvo.length){aviso('Nenhuma peça sem foto');return;}
-  if(!window.confirm(`Excluir definitivamente ${alvo.length} peça(s) sem foto cadastrada? Esta ação não poderá ser desfeita.`))return;
-  const listaAnterior=P, excluidosAnterior=new Set(EXCLUIDOS);
-  P=P.filter(p=>p.foto); P.forEach((x,k)=>x.i=k); S.pagina=1;
-  alvo.forEach(p=>EXCLUIDOS.add(p.c)); pintar();
-  const dados=construirCatalogo(P.map(({tk,...produto})=>produto));
-  const botao=$('btExcluirSemFoto');
-  botao.disabled=true;
-  try{
-    await salvarCatalogo(dados);
-    aviso(`${alvo.length} peça(s) sem foto excluída(s) definitivamente`);
-  }catch(erro){
-    P=listaAnterior; EXCLUIDOS=excluidosAnterior; P.forEach((x,k)=>x.i=k); pintar(); aviso(erro.message);
-  }finally{botao.disabled=false;}
-};
-$('btOtimizar').onclick=async()=>{
-  const botao=$('btOtimizar');
-  botao.disabled=true;
-  try{
-    const resposta=await fetch(MIGRAR_URL,{method:'POST',headers:{'X-Bloom-Token':API_TOKEN}});
-    const resultado=await resposta.json().catch(()=>null);
-    if(!resposta.ok||!resultado||resultado.ok!==true){
-      throw new Error(resultado&&resultado.erro||'Não foi possível otimizar as fotos.');
-    }
-    if(resultado.fotos_migradas>0){
-      if(Array.isArray(resultado.produtos)){
-        P=resultado.produtos.map((p,i)=>indexarProduto({...p,i}));
-        proxCod=Math.max(...P.map(p=>p.c),0)+1;
-      }
-      if(typeof resultado.colecao==='string')DADOS.colecao=resultado.colecao;
-      if(typeof resultado.banner==='string')DADOS.banner=resultado.banner;
-      pintar();
-      aviso(`${resultado.fotos_migradas} foto(s) movida(s) para arquivos — catálogo ficou bem mais leve`);
-    }else{
-      aviso('Nenhuma foto precisava ser otimizada');
-    }
-  }catch(erro){aviso(erro.message);}
   finally{botao.disabled=false;}
 };
 function fecharImp(){$('telaImp').classList.remove('on');document.body.classList.remove('trava');$('impResultado').innerHTML='';}
