@@ -492,7 +492,7 @@ $('btLimpar').onclick=async()=>{
 $('btExcluirEsgotados').onclick=async()=>{
   const alvo=P.filter(p=>sit(p)!=='ok');
   if(!alvo.length){aviso('Nenhuma peça esgotada ou fora do site');return;}
-  if(!window.confirm(`Excluir ${alvo.length} peça(s) com tamanho esgotado ou fora do site? Esta ação poderá ser desfeita apenas agora.`))return;
+  if(!window.confirm(`Excluir definitivamente ${alvo.length} peça(s) com tamanho esgotado ou fora do site? Esta ação não poderá ser desfeita.`))return;
   const listaAnterior=P;
   P=P.filter(p=>sit(p)==='ok'); P.forEach((x,k)=>x.i=k); S.pagina=1; pintar();
   const dados=construirCatalogo(P.map(({tk,...produto})=>produto));
@@ -500,16 +500,7 @@ $('btExcluirEsgotados').onclick=async()=>{
   botao.disabled=true;
   try{
     await salvarCatalogo(dados);
-    aviso(`${alvo.length} peça(s) excluída(s)`,async()=>{
-      P=listaAnterior; P.forEach((x,k)=>x.i=k); pintar();
-      try{
-        const restaurado=construirCatalogo(P.map(({tk,...produto})=>produto));
-        await salvarCatalogo(restaurado);
-        aviso('Exclusão desfeita');
-      }catch(erro){
-        P=P.filter(p=>sit(p)==='ok'); P.forEach((x,k)=>x.i=k); pintar(); aviso(erro.message);
-      }
-    });
+    aviso(`${alvo.length} peça(s) excluída(s) definitivamente`);
   }catch(erro){
     P=listaAnterior; P.forEach((x,k)=>x.i=k); pintar(); aviso(erro.message);
   }finally{botao.disabled=false;}
