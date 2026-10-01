@@ -205,13 +205,21 @@ document.addEventListener('click',e=>{
     const [pi,vj]=t.dataset.t.split('|').map(Number);
     const p=P[pi], v=p.v[vj], antes=v.on;
     v.on=!v.on;
-    const eraZero=p.v.filter(x=>x.on).length===(antes?1:0);
     pintar();
     const saiu=sit(p)==='zero';
-    aviso(v.on?`<b>${esc(p.n)}</b> · tamanho ${esc(v.t)} voltou ao site`
+    const msg=v.on?`<b>${esc(p.n)}</b> · tamanho ${esc(v.t)} voltou ao site`
       :saiu?`<b>${esc(p.n)}</b> saiu da vitrine — todos os tamanhos esgotados`
-           :`<b>${esc(p.n)}</b> · tamanho ${esc(v.t)} saiu do site`,
-      ()=>{v.on=antes;pintar();aviso('Desfeito');});
+           :`<b>${esc(p.n)}</b> · tamanho ${esc(v.t)} saiu do site`;
+    const dados=construirCatalogo(P.map(({tk,...produto})=>produto));
+    salvarCatalogo(dados).then(()=>{
+      aviso(msg,()=>{
+        v.on=antes; pintar();
+        const desfeito=construirCatalogo(P.map(({tk,...produto})=>produto));
+        salvarCatalogo(desfeito).then(()=>aviso('Desfeito')).catch(erro=>{v.on=!antes;pintar();aviso(erro.message);});
+      });
+    }).catch(erro=>{
+      v.on=antes; pintar(); aviso(erro.message);
+    });
     return;
   }
   const m=e.target.closest('[data-menu]');
