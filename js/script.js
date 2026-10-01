@@ -795,8 +795,9 @@
       }, 0);
       const listaTexto = selecionados.map((item, idx) => {
         const x = produtoDaSacola(item);
-        return `${idx + 1}. ${x.n} — Tam. ${item.tam} — ${rs(precoDoTamanho(x, item.tam))}`;
-      }).join('\n');
+        const link = `https://${SITE}/?produto=${encodeURIComponent(x.slug)}&codigo=${encodeURIComponent(x.c)}`;
+        return `${idx + 1}. ${x.n} — Tam. ${item.tam} — ${rs(precoDoTamanho(x, item.tam))}\n${link}`;
+      }).join('\n\n');
 
       wa('Olá, Bloom! 🌼 Quero fechar este pedido da minha sacola:\n\n'
         + listaTexto
